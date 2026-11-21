@@ -1,0 +1,58 @@
+{
+  "total_examples": 549,
+  "split_counts": {
+    "train": 464,
+    "val": 40,
+    "test": 45
+  },
+  "split_percentages": {
+    "train": 84.52,
+    "val": 7.29,
+    "test": 8.2
+  },
+  "behavior_counts_by_split": {
+    "train": {
+      "grounded_multi": 74,
+      "grounded_single": 245,
+      "handoff": 145
+    },
+    "val": {
+      "grounded_multi": 6,
+      "grounded_single": 22,
+      "handoff": 12
+    },
+    "test": {
+      "grounded_multi": 7,
+      "grounded_single": 24,
+      "handoff": 14
+    }
+  },
+  "language_counts_by_split": {
+    "train": {
+      "ar_eg": 258,
+      "ar_to_en": 8,
+      "en": 174,
+      "en_to_ar": 24
+    },
+    "val": {
+      "ar_eg": 18,
+      "en": 20,
+      "en_to_ar": 2
+    },
+    "test": {
+      "ar_eg": 19,
+      "en": 23,
+      "en_to_ar": 3
+    }
+  },
+  "train_single_citation_positions": {
+    "[1]": 91,
+    "[2]": 58,
+    "[3]": 67,
+    "[4]": 29
+  },
+  "max_cross_split_question_jaccard": 0.4737,
+  "errors": [],
+  "seed": 42,
+  "passed": true
+}

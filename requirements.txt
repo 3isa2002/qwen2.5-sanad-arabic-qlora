@@ -1,0 +1,4 @@
+# Lightweight local dependencies (dataset build, validation, config parsing, offline tests).
+# For GPU training & evaluation on Colab T4 / Kaggle, use requirements-train.txt.
+pyyaml>=6.0
+pytest>=8.0
