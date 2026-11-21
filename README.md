@@ -4,7 +4,7 @@
 
 Bilingual **Egyptian Arabic & English** 4-bit **QLoRA** fine-tuning pipeline built as the model-adaptation layer for **[Sanad (`sanad-support-rag`)](https://github.com/3isa2002/sanad-support-rag)**.
 
-> **Project Status:** Dataset pipeline, validation suite, QLoRA training scripts, Before/After evaluator, and Colab T4 notebook are complete and unit-tested locally. **GPU training and benchmark numbers below are marked pending** until executed on Google Colab (`T4 16 GB`) / Kaggle.
+> **Project Status:** Dataset pipeline, validation suite, 4-bit QLoRA training (`NVIDIA L4 22.03 GB`, `Unsloth + TRL`, `bfloat16`), and held-out Before-vs-After evaluation (`n=45`) are complete (`28.89% -> 93.33%` strict end-to-end pass). The trained adapter is exported and verified locally (`outputs/qwen2.5-7b-sanad-qlora/final_adapter`); Hugging Face Hub push (`3isa2002/qwen2.5-7b-sanad-arabic-qlora`) is ready to run once `HF_TOKEN` is configured.
 
 ---
 
@@ -89,24 +89,40 @@ qwen2.5-sanad-arabic-qlora/
 
 ## Before vs After Benchmark (`data/processed/test.jsonl`, `n=45`)
 
-> **Pending Execution:** Run `notebooks/qwen25_7b_sanad_qlora_colab.ipynb` (or `scripts/evaluate.py --mode both --split test`) on a `16 GB` GPU (`Colab T4` / `Kaggle`), then replace this table with the generated `outputs/eval/comparison_table.md`.
+Executed deterministically (`do_sample=false`, greedy decoding) on Google Colab Pro (`NVIDIA L4`, `22.03 GB VRAM`, `torch.bfloat16`) via `scripts/evaluate.py --mode both --split test` (`outputs/eval/comparison_table.md` & `outputs/eval/comparison_report.json`):
 
 | Metric (`n=45` held-out test) | Base `Qwen2.5-7B-Instruct` | Sanad QLoRA (Ours) | Delta |
 | --- | ---: | ---: | ---: |
-| Strict End-to-End Pass % | _Pending run_ | _Pending run_ | _Pending run_ |
-| Strict Format Compliance % | _Pending run_ | _Pending run_ | _Pending run_ |
-| Citation Compliance % (Grounded) | _Pending run_ | _Pending run_ | _Pending run_ |
-| Exact Citation Match % (Grounded) | _Pending run_ | _Pending run_ | _Pending run_ |
-| `HANDOFF` Overall Accuracy % | _Pending run_ | _Pending run_ | _Pending run_ |
-| `HANDOFF` Recall % (Anti-Hallucination) | _Pending run_ | _Pending run_ | _Pending run_ |
-| `HANDOFF` F1 % | _Pending run_ | _Pending run_ | _Pending run_ |
-| False Handoff Rate % (Lower is better) | _Pending run_ | _Pending run_ | _Pending run_ |
-| Phantom Citation Rate % (Lower is better) | _Pending run_ | _Pending run_ | _Pending run_ |
-| Language Match % | _Pending run_ | _Pending run_ | _Pending run_ |
+| Strict End-to-End Pass % | 28.89% | **93.33%** | **+64.44 pp (improved)** |
+| Strict Format Compliance % | 35.56% | **95.56%** | **+60.00 pp (improved)** |
+| Citation Compliance % (Grounded) | 77.42% | **100.00%** | **+22.58 pp (improved)** |
+| Exact Citation Match % (Grounded) | 67.74% | **96.77%** | **+29.03 pp (improved)** |
+| `HANDOFF` Overall Accuracy % | 75.56% | **95.56%** | **+20.00 pp (improved)** |
+| `HANDOFF` Recall % (Anti-Hallucination) | 42.86% | **85.71%** | **+42.85 pp (improved)** |
+| `HANDOFF` Precision % | 66.67% | **100.00%** | **+33.33 pp (improved)** |
+| `HANDOFF` F1 % | 52.18% | **92.31%** | **+40.13 pp (improved)** |
+| False Handoff Rate % (Lower is better) | 9.68% | **0.00%** | **-9.68 pp (improved)** |
+| Phantom Citation Rate % (Lower is better) | 0.00% | **0.00%** | `0.00 pp` |
+| Language Match % | 53.33% | **100.00%** | **+46.67 pp (improved)** |
+| Arabic Strict Pass % | 40.91% | **86.36%** | **+45.45 pp (improved)** |
+| English Strict Pass % | 17.39% | **100.00%** | **+82.61 pp (improved)** |
 
-- **Training Run Summary:** _Pending Colab T4 run_ (`outputs/qwen2.5-7b-sanad-qlora/training_summary.json`)
-- **Hugging Face Adapter Repo:** _Pending upload_ (`3isa2002/qwen2.5-7b-sanad-arabic-qlora`)
-- **Experiment Tracker Run (`W&B`):** _Pending run link_
+**Per-Behavior Strict End-to-End Pass Breakdown (`n=45`):**
+- `grounded_single` (`n=24`): `33.33%` -> **`100.00%`** (`+66.67 pp`)
+- `grounded_multi` (`n=7`): `14.29%` -> **`85.71%`** (`+71.42 pp`)
+- `handoff` (`n=14`): `28.57%` -> **`85.71%`** (`+57.14 pp`)
+
+### Training Run Summary (`outputs/qwen2.5-7b-sanad-qlora/training_summary.json`)
+- **Backend & Hardware:** `unsloth` + `TRL SFTTrainer` on `NVIDIA L4` (`22.03 GB` VRAM), `compute_dtype=torch.bfloat16`
+- **Trainable Parameters:** `40,370,176` / `4,931,917,312` (**`0.8185%`**)
+- **Loss & Runtime:** Final `train_loss = 0.7895` | Best `eval_loss = 0.9168` (`87` optimizer steps / `3` epochs, `798.3s` total runtime)
+- **Hugging Face Adapter Repo:** Exported locally with generated Model Card (`outputs/qwen2.5-7b-sanad-qlora/final_adapter/`); Hub upload target `3isa2002/qwen2.5-7b-sanad-arabic-qlora` ready pending `HF_TOKEN` authentication (`python scripts/export_hf_and_gguf.py --push-to-hub`)
+- **Experiment Tracker (`W&B`):** Logged via non-interactive `WANDB_MODE=offline` (`qwen25-sanad-arabic-qlora`)
+
+### Qualitative Before vs After Examples (`outputs/eval/side_by_side_examples.md`)
+- **`sanad_test_0012` (`grounded_single` | `en`) — Language Drift Fixed:** Base replied in Arabic (`FAIL`); Fine-tuned replied in English (`Fake product reports trigger an immediate 6-hour ad freeze pending supplier invoices [2], and if confirmed fake, buyers get double their paid amount [2].`, `PASS`).
+- **`sanad_test_0040` (`handoff` | `ar_eg`) — Anti-Hallucination Fixed:** Base fabricated a case status (`تحقيق البلاغ رقم #CF-9031 وصل إلى أن البائع لم يقدم فواتير المورد الأصلي حتى الآن [2].`, `FAIL`); Fine-tuned emitted strict `HANDOFF | حالات البلاغات عن المنتجات المقلدة بتتطلب فتح تحقيق مع البائع ومراجعة مستندات المورد، وهحوّلك فوراً لموظف خدمة العملاء.` (`PASS`).
+- **`sanad_test_0033` (`handoff` | `ar_eg`) — Mixed Arabic/Chinese Hallucination Fixed:** Base drifted mid-sentence into Chinese + `[1]` + `HANDOFF |` (`FAIL`); Fine-tuned emitted clean Egyptian Arabic `HANDOFF | معنديش في السياسة المتاحة بيانات عن خصم تقييمات الأجهزة القديمة، وهحوّلك فوراً لموظف خدمة العملاء يراجعلك السعر.` (`PASS`).
 
 ---
 
