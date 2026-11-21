@@ -1,10 +1,11 @@
 # Sanad — Qwen2.5-7B-Instruct 4-bit QLoRA Fine-Tuning
 
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/3isa2002/qwen2.5-sanad-arabic-qlora/blob/main/notebooks/qwen25_7b_sanad_qlora_colab.ipynb)
+[![Hugging Face Adapter](https://img.shields.io/badge/Hugging%20Face-3isa2002%2Fqwen2.5--7b--sanad--arabic--qlora-yellow?logo=huggingface)](https://huggingface.co/3isa2002/qwen2.5-7b-sanad-arabic-qlora)
 
 Bilingual **Egyptian Arabic & English** 4-bit **QLoRA** fine-tuning pipeline built as the model-adaptation layer for **[Sanad (`sanad-support-rag`)](https://github.com/3isa2002/sanad-support-rag)**.
 
-> **Project Status:** Dataset pipeline, validation suite, 4-bit QLoRA training (`NVIDIA L4 22.03 GB`, `Unsloth + TRL`, `bfloat16`), and held-out Before-vs-After evaluation (`n=45`) are complete (`28.89% -> 93.33%` strict end-to-end pass). The trained adapter is exported and verified locally (`outputs/qwen2.5-7b-sanad-qlora/final_adapter`); Hugging Face Hub push (`3isa2002/qwen2.5-7b-sanad-arabic-qlora`) is ready to run once `HF_TOKEN` is configured.
+> **Project Status:** Complete — dataset pipeline, validation suite, 4-bit QLoRA training (`NVIDIA L4 22.03 GB`, `Unsloth + TRL`, `bfloat16`), held-out Before-vs-After evaluation (`n=45`, `28.89% -> 93.33%` strict end-to-end pass), and live LoRA adapter + Model Card published on **[Hugging Face Hub (`3isa2002/qwen2.5-7b-sanad-arabic-qlora`)](https://huggingface.co/3isa2002/qwen2.5-7b-sanad-arabic-qlora)**.
 
 ---
 
@@ -116,7 +117,7 @@ Executed deterministically (`do_sample=false`, greedy decoding) on Google Colab 
 - **Backend & Hardware:** `unsloth` + `TRL SFTTrainer` on `NVIDIA L4` (`22.03 GB` VRAM), `compute_dtype=torch.bfloat16`
 - **Trainable Parameters:** `40,370,176` / `4,931,917,312` (**`0.8185%`**)
 - **Loss & Runtime:** Final `train_loss = 0.7895` | Best `eval_loss = 0.9168` (`87` optimizer steps / `3` epochs, `798.3s` total runtime)
-- **Hugging Face Adapter Repo:** Exported locally with generated Model Card (`outputs/qwen2.5-7b-sanad-qlora/final_adapter/`); Hub upload target `3isa2002/qwen2.5-7b-sanad-arabic-qlora` ready pending `HF_TOKEN` authentication (`python scripts/export_hf_and_gguf.py --push-to-hub`)
+- **Hugging Face Adapter Repo:** Published live at **[huggingface.co/3isa2002/qwen2.5-7b-sanad-arabic-qlora](https://huggingface.co/3isa2002/qwen2.5-7b-sanad-arabic-qlora)** (`adapter_model.safetensors`, `adapter_config.json`, tokenizer, `chat_template.jinja`, Model Card `README.md`)
 - **Experiment Tracker (`W&B`):** Logged via non-interactive `WANDB_MODE=offline` (`qwen25-sanad-arabic-qlora`)
 
 ### Qualitative Before vs After Examples (`outputs/eval/side_by_side_examples.md`)
