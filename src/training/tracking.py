@@ -36,22 +36,28 @@ def init_experiment_tracker(
     }
 
     if tracker == "none":
+        os.environ.setdefault("WANDB_DISABLED", "true")
         return [], None
 
     if tracker == "wandb":
+        # Check API key / netrc before wandb.init so Colab never stalls on interactive prompts.
+        netrc_path = os.path.expanduser("~/.netrc")
+        has_netrc = os.path.exists(netrc_path) and "api.wandb.ai" in open(netrc_path, encoding="utf-8", errors="ignore").read()
+        has_key = bool(os.environ.get("WANDB_API_KEY")) or has_netrc
+        wandb_mode = "online" if has_key else "offline"
+        if not has_key:
+            os.environ["WANDB_MODE"] = "offline"
+            print("[tracking] WANDB_API_KEY not found; running W&B in non-interactive offline mode.")
+
         try:
             import wandb
         except ImportError as exc:
             raise RuntimeError("wandb is not installed; run pip install wandb or pass --tracker none") from exc
 
-        # Fall back to offline logging if user hasn't configured WANDB_API_KEY in Colab/local env.
-        if not os.environ.get("WANDB_API_KEY") and not wandb.api.api_key:
-            os.environ.setdefault("WANDB_MODE", "offline")
-            print("[tracking] WANDB_API_KEY not found; running W&B in offline mode.")
-
         run = wandb.init(
             project=cfg.tracking.wandb_project,
             name=effective_name,
+            mode=wandb_mode,
             config={**hyperparams, "full_config": asdict(cfg)},
             tags=tags or ["qwen2.5-7b", "qlora", "sanad", "arabic"],
             reinit=True,
@@ -59,6 +65,7 @@ def init_experiment_tracker(
         return ["wandb"], run
 
     if tracker == "mlflow":
+        os.environ.setdefault("WANDB_DISABLED", "true")
         try:
             import mlflow
         except ImportError as exc:
